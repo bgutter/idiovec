@@ -354,6 +354,11 @@ fit an =idiovec= model to data such as this, that model should be able
 to roughly predict the city, or region, associated with the author of
 any given text.
 
+TODO
+- Fit cities to comments
+- Analyze vector clusters
+- Confusion matrix
+
 ** Authorship Assignment via Idiolect Vectors
 
 TODO

@@ -71,7 +71,7 @@ known that you live somewhere in the southeast of the United
 States. If you post frequently on /r/programming, then details about
 your profession become known, or at least implied, and so on.
 
-Tools such as [[https://snoopsnoo.com/][snoopsnoo]], and it's backend [[https://github.com/orionmelt/sherlock][Sherlock]], exploit this
+Tools such as [[https://snoopsnoo.com/][snoopsnoo]], and its backend [[https://github.com/orionmelt/sherlock][Sherlock]], exploit this
 information to provide identifying summaries of Reddit accounts.
 
 What people do not tend to think about, however, is the impact that
@@ -227,26 +227,62 @@ dialect of those comments matches /r/android? That sort of thing.
 the current implementation is neither remotely complete nor
 even functional.
 
-That being said, the current plan is that =idiovec= will accept a
-corpus of texts, and a set of labels for each text in the corpus. When
-using Reddit data, this can be comment + username, or comment +
-subreddit, etc.
+That being said, the current plan is that =idiovec= will be
+implemented using two deep learning models -- first, a model which
+generates embeddings for the labeled inputs, and second, an encoder
+which generates embeddings from novel inputs. At the core of both of
+these models will be hand-written identifiers implementing established
+and novel stylometric methods.
 
-From here, =idiovec= will do the following;
-1. Calculate an ensemble of indicators on each comment.
-2. Fit a model for transforming the collection of indicators into a
-   vector.
-4. Return vectors for each unique 'tag' in the passed set.
+** The Training Data
 
-That vector will act as an identifier for the tag (user, subreddit,
-etc) associated with it. Two vectors with a short cosine distance will
-be considered to have similar dialects. Extremely small cosine
-distances, when generated over a respectably sized dataset, may
-suggest a common author.
+This is trivially simple. Each sample consists of a text -- such as a
+Reddit comment -- and a label. The label would be a Reddit username,
+for idiolect vectorization, or a subreddit name for dialect
+vectorization, etc.
 
-** Indicators Implemented
+** The Stylometric Characteristic Vector
 
-=idiovec= only works as well as its indicators.
+=idiovec= will transform the input text, in every sample, into a set
+of attribute vectors. These will be calculated from a set of
+styolmetric algorithms & models.
+
+While existing stylometric properties will be implemented to establish
+a performance baseline, the goal is to move towards more perceptive
+indicators which have not previously been possible. We will go into
+the indicators in more detail below -- for now, just know that texts
+are transformed into characteristic vectors.
+
+** The Embeddings
+
+The input to the embedding model is a one-hot encoding, with one
+binary input per label in the vocabulary (number of authors or
+communities in the training set, for example). The training output
+of this model will be the stylometric characteristic vector generated
+from a text corresponding to that author.
+
+The hidden layer will capture the embeddings for each label in the
+training set.
+
+At this point, the embeddings from accounts in the training set can
+already be compared and clustered in order to find relationships
+between accounts and communities. However, the model will need to be
+recomputed in order to analyze new data. Our final step works around
+this limitation.
+
+** The Encoder
+
+The encoder will accept, as input, a stylometric characteristic vector
+and produce, as its output, and idiolect vector embedding.
+
+Once trained, *this model will allow us to map transform arbitrary
+texts into relational vectors extremely efficiently*. Executing the
+encoder model allows us to avoid re-learning the embedding model
+whenever new data has been added to the dataset.
+
+** More on Stylometric Characteristic Vectors
+
+=idiovec= only works as well as its feature detectors.
 
 The first three below are established methods of stylometry, and are
 explained exceptionally well by [[https://programminghistorian.org/en/lessons/introduction-to-stylometry-with-python][the Programming Historian]]. They will
@@ -277,6 +313,10 @@ TODO flesh out idea
 This method will use [[https://spacy.io/usage/linguistic-features][Spacy parse trees]] and some method of tree
 averaging and tree comparison to find common habits in sentence
 structuring. For example, [[https://en.wikipedia.org/wiki/Preposition_stranding][preposition stranding]].
+
+This is primarily a perceptual problem, and as such, the mapping from
+grammar tree to characteristic vector /may require a neural model on
+its own/.
 
 *** Word Embeddings and Synonym Selection
 

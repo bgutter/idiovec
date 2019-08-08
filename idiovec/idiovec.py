@@ -22,7 +22,11 @@ import scipy as sp
 import matplotlib.pyplot as plt
 import requests
 
-from . import cruft
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
+
+import cruft
 
 class Identifier( object ):
     """
@@ -30,18 +34,25 @@ class Identifier( object ):
     by adding texts of some user together, and then compared to one another.
     """
 
-    def sampleTexts( texts ):
+    def sampleTexts( self, texts ):
         """
         Update instance of this identifier with additional sample texts for the author.
         """
         raise NotImplementedError
 
-    def compare( other ):
+    @property
+    def value( self ):
         """
-        Return a distance between 0.0 and 1.0 between this Identifier and another of the same
-        subclass.
+        Return a (1,M) shaped vector of floats describing this identifier.
         """
         raise NotImplementedError
+
+    #def compare( other ):
+    #    """
+    #    Return a distance between 0.0 and 1.0 between this Identifier and another of the same
+    #    subclass.
+    #    """
+    #    raise NotImplementedError
 
 class MendenhallIdentifier( Identifier ):
     """
@@ -73,48 +84,111 @@ class MendenhallIdentifier( Identifier ):
             self.dist = ( ( self.sample_count * self.dist ) + h ) / ( self.sample_count + 1 )
             self.sample_count += 1
 
-    def compare( self, other ):
+    @property
+    def value( self ):
         """
-        Get the distance between this MendenhallIdentifier and another.
+        Current dist is our value.
         """
-        assert( all( self.bin_edges == other.bin_edges ) )
-        ks, p = sp.stats.ks_2samp( self.dist, other.dist )
-        return ks
+        return self.dist
+
+    #def compare( self, other ):
+    #    """
+    #    Get the distance between this MendenhallIdentifier and another.
+    #    """
+    #    assert( all( self.bin_edges == other.bin_edges ) )
+    #    ks, p = sp.stats.ks_2samp( self.dist, other.dist )
+    #    return ks
 
     def plot( self ):
         plt.figure()
         plt.plot( self.dist )
         plt.show()
 
-def Idiovec( object ):
+def IdiovecModel( object ):
     """
-    Implements idiovecs for a given author or source.
+    Fits idiolect vectors to a training set.
     """
 
-    def __init__( self ):
+    def __init__( self, dim=8 ):
         """
         Initialize a new Idiovec.
+            dim: Dimensionality of the idiolect embeddings.
         """
-        self.identifiers = []
-        self.identifiers.append( MendenhallIdentifier() )
+        # Model Parameters
+        self.dim = dim
+        self.identifierClasses = []
+        self.identifierClasses.append( MendenhallIdentifier )
+
+        # State
+        self.X = []
+        self.Y = []
+
+    def sample_texts( self, X, Y ):
+        """
+        Add more sample texts.
+            X: A vector of texts of length M.
+            Y: A vector of labels of length M -- for example, authors.
+        """
+        for x, y in zip( X, Y ):
+            preprocd_x = []
+            for ic in self.identifierClasses:
+                idt = ic()
+                idt.sample_texts( x )
+                preprocd_x.extend( idt.value )
+            self.X.append( np.array( preprocd_x ) )
+            self.y.append( y )
+
+    def fit( self ):
+        """
+        Fit model to all sampled texts.
+        """
+        #
+        # Create a TensorFlow model with each X[n].value as an input, and the output vector embeddings.
+        # Code adapted from: https://www.tensorflow.org/beta/tutorials/text/word_embeddings
+        #  https://adventuresinmachinelearning.com/word2vec-keras-tutorial/
+        uniqueLabelCount = len( set( self.Y ) )
+        catenatedIdentifierLength = self.X[0].dim[0]
+        model = keras.Sequential( [
+            layers.Embedding( uniqueLabelCount, self.dim, catenatedIdentifierLength ),
+            layers.GlobalAveragePolling1D(),
+            layers.Dense( 16, activation='relu' ),
+            layers.Dense( 1, activation='sigmoid' )
+            ])
+
+        model.compile(optimizer='adam',
+              loss='cosine_distance',
+                      metrics=????)
+
+
+
+    def transform( self, text ):
+        """
+        Given a text, calculate identifiers and return an idiovec. Requires
+        fit() to have already been called.
+        """
+        raise NotImplementedError
 
 # TEST DRIVER
 
 import pickle
 
-authors = [ "GallowBoob", "Unidan" ]
+authors = [ "GallowBoob", "Unidan", "_vargas_" ]
 texts = {}
 
 for a in authors:
     json = requests.get( "https://api.pushshift.io/reddit/search/comment/?author={}".format( a ) ).json()
     texts[ a ] = [ x[ 'body' ] for x in json[ "data" ] ]
 
-m1 = MendenhallIdentifier()
-m1.sampleTexts( texts[ "GallowBoob" ] )
+mendenhalls = []
+for author in authors:
+    l = len( texts[ author ] )
+    left, right = texts[ author ][ : l // 2 ], texts[ author ][ l // 2 :]
+    lm = MendenhallIdentifier()
+    lm.sampleTexts( left )
+    mendenhalls.append( lm )
+    rm = MendenhallIdentifier()
+    rm.sampleTexts( right )
+    mendenhalls.append( rm )
 
-m2 = MendenhallIdentifier()
-m2.sampleTexts( texts[ "Unidan" ] )
 
-d = m1.compare( m2 )
-
-m2.plot()
+#m2.plot()
