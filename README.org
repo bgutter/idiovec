@@ -1,6 +1,18 @@
 # -*- org-export-babel-evaluate: nil -*-
 #+TITLE: Idiovec
 
+-----
+
+🚨🚨🚨
+
+*NOTE* This is not yet implemented! Do not get your hopes up!
+Until this notice is removed, consider this repo to be nothing more
+than a glitter in my eye.
+
+🚨🚨🚨
+
+-----
+
 =idiovec= is an idiolect vectorization library for text-based user
 fingerprinting. It generates vectors which describe the *typical patterns of
 non-semantic elements* in a corpus. Non-semantic elements in a text
