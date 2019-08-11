@@ -1,51 +1,27 @@
 # -*- org-export-babel-evaluate: nil -*-
 #+TITLE: Dialect Fingerprinting of American Users
 
-Here, we will attempt to evaluate the performance of =idiovec= at both
-dialect and idiolect detection. We will do this using data from Reddit
-accounts associated with the subreddits of various US cities. Our
-process will be as follows;
+Here, we will attempt to evaluate the performance of =idiovec= at both dialect and idiolect detection. We will do this using data from Reddit accounts associated with the subreddits of various US cities. Our process will be as follows;
 
-1. We will determine the 31 largest Metropolitan Statistical Areas in
-   the United States, according to the [[https://en.wikipedia.org/wiki/List_of_metropolitan_statistical_areas][United States Office of
-   Management and Budget]].
-2. From the largest subreddit associated with each city, we will
-   collect the 30 most active users from the year 2018, excluding
-   those which are apparently bots. All Reddit data will be pulled
-   from the [[https://pushshift.io/][fantastic Pushshift.io API]].
-3. From each of those 31*30 users, we will collect 100 random comments
-   made in 2018 -- across all subreddits.
+1. We will determine the 31 largest Metropolitan Statistical Areas in the United States, according to the [[https://en.wikipedia.org/wiki/List_of_metropolitan_statistical_areas][United States Office of Management and Budget]].
+2. From the largest subreddit associated with each city, we will collect the 30 most active users from the year 2018, excluding those which are apparently bots. All Reddit data will be pulled from the [[https://pushshift.io/][fantastic Pushshift.io API]].
+3. From each of those 31*30 users, we will collect 100 random comments made in 2018 -- across all subreddits.
 
-We are collecting 31 cities, as opposed to 30, because Kansas City is
-number 31.
+We are collecting 31 cities, as opposed to 30, because Kansas City is number 31.
 
-Once the dataset is on-hand, we will cache it locally. We will then
-clean up and normalize those comments.
+Once the dataset is on-hand, we will cache it locally. We will then clean up and normalize those comments.
 
-In order to evaluate dialect detection, we will answer the following
-questions;
-1. Are idiolect vectors from users of the same city-subreddit more
-   proximal to one another than to users from other city-cubreddits?
-2. Does a similar rule hold for cities [[https://www.businessinsider.com/regional-differences-united-states-2018-1][within the same cultural zone]],
-   as posited by Collin Woodard?
+In order to evaluate dialect detection, we will answer the following questions;
+1. Are idiolect vectors from users of the same city-subreddit more proximal to one another than to users from other city-cubreddits?
+2. Does a similar rule hold for cities [[https://www.businessinsider.com/regional-differences-united-states-2018-1][within the same cultural zone]], as posited by Collin Woodard?
 3. What about the "megaregions" posited by [[http://www.america2050.org/about.html][America 2050]]?
-4. The commute and commerce maps published by the Department of
-   Transportation?
-5. If not, is there any relationship between geographic distance and
-   idiolect vector distance?
+4. The commute and commerce maps published by the Department of Transportation?
+5. If not, is there any relationship between geographic distance and idiolect vector distance?
 
-In order to evaluate idiolect detection, we will plot ROC (receiver
-operator characteristic) curves describing the ability of =idiovec= to
-correctly predict whether a given collection of comments was authored
-by a particular Reddit account.
+In order to evaluate idiolect detection, we will plot ROC (receiver operator characteristic) curves describing the ability of =idiovec= to correctly predict whether a given collection of comments was authored by a particular Reddit account.
 
 * Disclaimer
-Note that =idiovec= is still under development. This document is being
- used to define the behavior of the module, and therefore, content
- will be added to this document before they are implemented in
- =idiovec=. This is an API-first development approach. At the first
- stable release of =idiovec=, this document will be frozen as
- reproducible reference material, and this disclaimer will be removed.
+Note that =idiovec= is still under development. This document is being used to define the behavior of the module, and therefore, content will be added to this document before they are implemented in =idiovec=. This is an API-first development approach. At the first stable release of =idiovec=, this document will be frozen as reproducible reference material, and this disclaimer will be removed.
 
 * Environment Initialization :noexport:
 
@@ -69,18 +45,18 @@ f = ip.display_formatter.formatters['text/org']
 f.for_type_by_name('pandas.core.frame', 'DataFrame', pd_dataframe_to_org)
 #+END_SRC
 
+#+RESULTS:
+:RESULTS:
+# Out[1]:
+:END:
+
 * Downloading the Data
 
 ** Top Commentors per City-Subreddit
 
-First, we'll define a list of the subreddits associated with the 31
-largest metropolitan areas in the US. Note the following executive
-decisions;
-1. /r/riverside was chosen for the Riverside-San Bernardino-Ontario,
-   CA MSA. There was no sizable, joint subreddit available, and both
-   of them may be quite similar to /r/LosAngeles anyway.
-2. /r/twincities was chosen over /r/minneapolis to be inclusive of
-   St. Paul, and because the subreddits are of comparable size.
+First, we'll define a list of the subreddits associated with the 31 largest metropolitan areas in the US. Note the following executive decisions;
+1. /r/riverside was chosen for the Riverside-San Bernardino-Ontario, CA MSA. There was no sizable, joint subreddit available, and both of them may be quite similar to /r/LosAngeles anyway.
+2. /r/twincities was chosen over /r/minneapolis to be inclusive of St. Paul, and because the subreddits are of comparable size.
 
 #+BEGIN_SRC ipython :session :exports both :results raw drawer
 city_subs = [
@@ -99,11 +75,10 @@ city_subs = [
 
 #+RESULTS:
 :RESULTS:
-# Out[65]:
+# Out[2]:
 :END:
 
-Next, for each of those cities, let's query the top commentors
-in 2018.
+Next, for each of those cities, let's query the top commentors in 2018.
 
 #+BEGIN_SRC ipython :session :exports both :results raw drawer
 import requests
@@ -136,19 +111,21 @@ And we'll cache that locally...
 #+BEGIN_SRC ipython :session :exports both :results raw drawer
 import pickle
 
-with open( "city_authors.pickle", "wb" ) as fout:
-    pickle.dump( city_authors, fout )
+# Toogle to read/write
+if False:
+    with open( "city_authors.pickle", "wb" ) as fout:
+        pickle.dump( city_authors, fout )
+else:
+    with open( "city_authors.pickle", "rb" ) as fin:
+        city_authors = pickle.load( fin )
 #+END_SRC
 
 #+RESULTS:
 :RESULTS:
-# Out[67]:
+# Out[3]:
 :END:
 
-=city_authors= is now a mapping from city, to username, to post count
-in that city's subreddit. Next, we want to remove any obvious bot
-or deleted accounts. Let's dump all usernames containing some common
-patterns;
+=city_authors= is now a mapping from city, to username, to post count in that city's subreddit. Next, we want to remove any obvious bot or deleted accounts. Let's dump all usernames containing some common patterns;
 
 #+BEGIN_SRC ipython :session :exports both :results raw drawer
 usernames = set()
@@ -179,8 +156,7 @@ flagged_usernames
 #+END_EXAMPLE
 :END:
 
-We really only need to remove three of these -- =AutoModerator=,
-=CommonMisspellingBot=, and =[deleted]=. Not bad.
+We really only need to remove three of these -- =AutoModerator=, =CommonMisspellingBot=, and =[deleted]=. Not bad.
 
 #+BEGIN_SRC ipython :session :exports both :results raw drawer
 # Update with results from manual inspection
@@ -197,9 +173,7 @@ for _, usermap in city_authors.items():
 # Out[69]:
 :END:
 
-Now that they're gone, let's update the schema of =city_authors= one
-last time such that it is strictly a map from subreddit name, to a
-list of the 30 top commentors in that subreddit.
+Now that they're gone, let's update the schema of =city_authors= one last time such that it is strictly a map from subreddit name, to a list of the 30 top commentors in that subreddit.
 
 #+BEGIN_SRC ipython :session :exports both :results raw drawer
 new_city_authors = {}
@@ -210,8 +184,7 @@ city_authors = new_city_authors
 
 ** Comments for Each Top User
 
-Now, we want to download a set of comments for each user. We will draw
-100 random comments from 2018, per user, across all of Reddit.
+Now, we want to download a set of comments for each user. We will draw 100 random comments from 2018, per user, across all of Reddit.
 
 #+BEGIN_SRC ipython :session :exports both :results raw drawer
 comments = []
@@ -236,63 +209,59 @@ for city, authors in city_authors.items():
 And we'll cache that...
 
 #+BEGIN_SRC ipython :session :exports both :results raw drawer
-with open( "raw_comments.pickle", "wb" ) as fout:
-    pickle.dump( comments, fout )
+import pickle
+if False:
+    with open( "raw_comments.pickle", "wb" ) as fout:
+        pickle.dump( comments, fout )
+else:
+    with open( "raw_comments.pickle", "rb" ) as fin:
+        comments = pickle.load( fin )
 #+END_SRC
 
 #+RESULTS:
 :RESULTS:
-# Out[78]:
+# Out[2]:
 :END:
 
-For convenience, we will restructure the comments as a =pandas=
-=Dataframe= object. If you're unfamiliar with that, it's basically
-like a SQL table or Excel spreadsheet.
+For convenience, we will restructure the comments as a =pandas= =Dataframe= object. If you're unfamiliar with that, it's basically like a SQL table or Excel spreadsheet.
 
 #+BEGIN_SRC ipython :session :exports both :results raw drawer
+import pandas as pd
 comments_df = pd.DataFrame( comments )
 #+END_SRC
 
+#+RESULTS:
+:RESULTS:
+# Out[3]:
+:END:
+
 * Cleaning It Up
 
-Now that we have a dataset to work with, we need to start cleaning
-things up. =idiovec= is not going to go out of it's way to deal with
-markup and quotations, so we need to clear that all out
-first. =idiovec= does, however, provide a Reddit sanitizer for
-pre-processing in its =cruft= module.
-
-We force-reload the module each time this block is evaluated to
-accommodate iterative development of the module.
+Now that we have a dataset to work with, we need to start cleaning things up. =idiovec= is not going to go out of it's way to deal with markup and quotations, so we need to clear that all out first. =idiovec= does, however, provide a Reddit sanitizer for pre-processing in its =cruft= module.
 
 #+BEGIN_SRC ipython :session :exports both :results raw drawer
 import idiovec
-import importlib
-import idiovec.cruft as cruft
-importlib.reload( idiovec )
-importlib.reload( cruft )
 #+END_SRC
 
 #+RESULTS:
 :RESULTS:
-# Out[115]:
-: <module 'idiovec.cruft' from '/encrypted_data_disk/seafile-shares/projects/DumpsterDiver/idiovec/idiovec/cruft.py'>
+# Out[10]:
+: <module 'idiovec' from '/encrypted_data_disk/seafile-shares/projects/DumpsterDiver/idiovec/idiovec/__init__.py'>
 :END:
 
-This will remove markers for bold, italics, and strikethrough, as well
-as URLs and quotations. We'll map this over all texts associated with
-each author.
+This will remove markers for bold, italics, and strikethrough, as well as URLs and quotations. We'll map this over all texts associated with each author.
 
 An example first;
 
 #+BEGIN_SRC ipython :session :exports both :results raw drawer
 before = comments_df.iloc[0][ 'comment' ]
-after  = cruft.reddit_sanitize( before )
+after  = idiovec.cruft.reddit_sanitize( before )
 { "Before: ": before, "After: ": after }
 #+END_SRC
 
 #+RESULTS:
 :RESULTS:
-# Out[118]:
+# Out[5]:
 #+BEGIN_EXAMPLE
   {'Before: ': '&gt; Now lower income residents of NYC only need 2 room mates instead of 3!\n\nSingle adults living in communal housing has been a thing for hundreds of years. Why is it seen as such a sin now?',
   'After: ': '\nSingle adults living in communal housing has been a thing for hundreds of years. Why is it seen as such a sin now?'}
@@ -303,12 +272,12 @@ Looks like it works fine. Let's apply this to the entire comment
 =DataFrame=.
 
 #+BEGIN_SRC ipython :session :exports both :results raw drawer
-comments_df[ "comment" ] = comments_df[ "comment" ].apply( cruft.reddit_sanitize )
+comments_df[ "comment" ] = comments_df[ "comment" ].apply( idiovec.cruft.reddit_sanitize )
 #+END_SRC
 
 #+RESULTS:
 :RESULTS:
-# Out[120]:
+# Out[6]:
 :END:
 
 And now, we're ready to fit our model! Here's a preview of our final
@@ -337,22 +306,35 @@ comments_df.sample( 10 )
 
 * Idiovec Models
 
-=idiovec=, generates vectors which describe the *typical patterns of
-non-semantic elements* in a corpus.
+=idiovec=, generates vectors which describe the *typical patterns of non-semantic elements* in a corpus.
 
-When a corpus is generated per-author, then the resulting vectors
-capture information about that individual's /idiolect/. On the other
-hand, when the corpus is composed of texts from a group of related
-authors, then the resulting vectors capture information about the
-common /dialect/ of those users.
+When a corpus is generated per-author, then the resulting vectors capture information about that individual's /idiolect/. On the other hand, when the corpus is composed of texts from a group of related authors, then the resulting vectors capture information about the common /dialect/ of those users.
 
 ** Dialect Vector Clustering
 
-If we fit idiolect vectors against city names, then =idiovec= should
-produce vectors corresponding to the dialects of those cities. If we
-fit an =idiovec= model to data such as this, that model should be able
-to roughly predict the city, or region, associated with the author of
-any given text.
+If we fit idiolect vectors against city names, then =idiovec= should produce vectors corresponding to the dialects of those cities. If we fit an =idiovec= model to data such as this, that model should be able to roughly predict the city, or region, associated with the author of any given text.
+
+First, we'll create an =IdiovecModel= and feed in our training data...
+
+#+BEGIN_SRC ipython :session :exports both :results raw drawer
+# We force-reload the module each time this block is evaluated to accommodate iterative development of the module.
+import importlib
+importlib.reload( idiovec )
+
+model = idiovec.IdiovecModel()
+model.sample_texts( comments_df[ "comment" ].values, comments_df[ "city" ].values )
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out[11]:
+:END:
+
+And fit the model...
+
+#+BEGIN_SRC ipython :session :exports both :results raw drawer
+model.fit()
+#+END_SRC
 
 TODO
 - Fit cities to comments
@@ -370,30 +352,13 @@ TODO
 * Archived                                 :noexport:
 ** Running and Evaluating Idiovec
 
-We want to test =idiovec= by generating an ROC curve. An ROC, or
-receiver operating characteristic, curve, describes a classifier's
-sensitivity relative to its specificity. In this context, sensitivity
-would be the fraction of correctly-labelled texts for one author
-divided by the total number of texts for that author. Specificity, on
-the other hand, is the fraction of texts attributed to that author
-which were actually originated by that author. In other worse,
-sensitivity punishes for false-negatives, and specificity punishes for
-false-positives. Generally one can be optimized at the cost of the
-other via a threshold, or combination thereof, internal to the
-classifier.
+We want to test =idiovec= by generating an ROC curve. An ROC, or receiver operating characteristic, curve, describes a classifier's sensitivity relative to its specificity. In this context, sensitivity would be the fraction of correctly-labelled texts for one author divided by the total number of texts for that author. Specificity, on the other hand, is the fraction of texts attributed to that author which were actually originated by that author. In other worse, sensitivity punishes for false-negatives, and specificity punishes for false-positives. Generally one can be optimized at the cost of the other via a threshold, or combination thereof, internal to the classifier.
 
-In our application, the hidden threshold which defines the ROC curve
-will be the minimum cosine distance between idiolect vectors required
-to determine independent authorship. *Two corpora whose idiolect
-vectors differ by a cosine distance below this threshold are
-considered to have been coauthored.*
+In our application, the hidden threshold which defines the ROC curve will be the minimum cosine distance between idiolect vectors required to determine independent authorship. *Two corpora whose idiolect vectors differ by a cosine distance below this threshold are considered to have been coauthored.*
 
-We'll be calculating the sensitivity and specificity at each cosine
-threshold using K-fold cross validation.
+We'll be calculating the sensitivity and specificity at each cosine threshold using K-fold cross validation.
 
-First, we need to restructure our data. Currently, it's a map from an
-author's name to a corpus -- or, a list of texts. In order to use the
-Scikit-Learn machine learning tools, we'll need it in an X, Y format.
+First, we need to restructure our data. Currently, it's a map from an author's name to a corpus -- or, a list of texts. In order to use the Scikit-Learn machine learning tools, we'll need it in an X, Y format.
 
 #+BEGIN_SRC ipython :session :exports both :results raw drawer
 X = []
@@ -404,8 +369,7 @@ for author, corpus in texts.items():
         Y.append( author )
 #+END_SRC
 
-Next, we will write some code that uses =idiovec= to fit idiolect
-vectors to each unique author.
+Next, we will write some code that uses =idiovec= to fit idiolect vectors to each unique author.
 
 #+BEGIN_SRC ipython :session :exports both :results raw drawer
 def fit( texts, authors ):

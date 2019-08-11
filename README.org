@@ -5,28 +5,17 @@
 
 🚨🚨🚨
 
-*NOTE* This is not yet implemented! Do not get your hopes up!
-Until this notice is removed, consider this repo to be nothing more
-than a glitter in my eye.
+*NOTE* This is not yet implemented! Do not get your hopes up!  Until this notice is removed, consider this repo to be nothing more than a glitter in my eye.
 
 🚨🚨🚨
 
 -----
 
-=idiovec= is an idiolect vectorization library for text-based user
-fingerprinting. It generates vectors which describe the *typical patterns of
-non-semantic elements* in a corpus. Non-semantic elements in a text
-include things like clause structure, function word selection, and
-choice of synonyms.
+=idiovec= is an idiolect vectorization library for text-based user fingerprinting. It generates vectors which describe the *typical patterns of non-semantic elements* in a corpus. Non-semantic elements in a text include things like clause structure, function word selection, and choice of synonyms.
 
-When applied to texts from a single author, the resulting vector
-describes that author's *idiolect*. When applied to a corpus of texts
-from a community of authors, the resulting vector describes their
-common *dialect*.
+When applied to texts from a single author, the resulting vector describes that author's *idiolect*. When applied to a corpus of texts from a community of authors, the resulting vector describes their common *dialect*.
 
-It aims to become a general purpose tool for clustering groups of
-texts originating from semi-anonymous authors. This can be applied to
-a number of problems;
+It aims to become a general purpose tool for clustering groups of texts originating from semi-anonymous authors. This can be applied to a number of problems;
 - Authorship assignment (as a form of stylometry)
 - Partial deanonymization
 - Anonymity protection via end-user awareness systems
@@ -34,277 +23,126 @@ a number of problems;
 * What does that mean?
 
 Let's go through some vocabulary first;
-- We will consider *language* to be a method of structuring ideas
-  that's mutually intelligible to some community.
-- A *dialect*, therefore, is a subset of a language that has different
-  patterns than the overall population of speakers of that language.
-- One step further, an *idiolect* captures the deviations in the use of a language
-  applicable to a single author. It is basically the dialect for a
-  community consisting of a single person.
+- We will consider *language* to be a method of structuring ideas that's mutually intelligible to some community.
+- A *dialect*, therefore, is a subset of a language that has different patterns than the overall population of speakers of that language.
+- One step further, an *idiolect* captures the deviations in the use of a language applicable to a single author. It is basically the dialect for a community consisting of a single person.
 
-If you can characterize someone's texts in terms of dialect, then you
-have inferred information about the communities with which that
-individual is associated. Similarly, if you can capture someone's
-idiolect, then you will be able to identify them -- with high accuracy
--- strictly by their texts.
+If you can characterize someone's texts in terms of dialect, then you have inferred information about the communities with which that individual is associated. Similarly, if you can capture someone's idiolect, then you will be able to identify them -- with high accuracy -- strictly by their texts.
 
-_This has significant social implications_, both in terms of user
-privacy and discussion authenticity.
+_This has significant social implications_, both in terms of user privacy and discussion authenticity.
 
 =idiovec= aims to characterize both of these in a generic way.
 
 * Show me some code
 
-This README is quite verbose. If you already "get it" and just want to
-"see it", take a look at this example usage of =idiovec=. In [[./example.org][this toy
-project]], we compare the dialects of different American cities on
-Reddit.
+This README is quite verbose. If you already "get it" and just want to "see it", take a look at this example usage of =idiovec=. In [[./example.org][this toy project]], we compare the dialects of different American cities on Reddit.
 
 * How does this "Make the World A Better Place™"
 
-Some parts of this project sound a little...[[https://en.wikipedia.org/wiki/Grey_hat][gray hat]]. So let's be
-clear about the intended purpose of =idiovec=.
+Some parts of this project sound a little...[[https://en.wikipedia.org/wiki/Grey_hat][gray hat]]. So let's be clear about the intended purpose of =idiovec=.
 
-Social media platforms like Reddit allow users to discuss a variety of
-topics without explicitly revealing any personally identifiable
-information. No name, no photo, no age, and no location. All that
-necessarily identifies you is a username of your choosing, and an
-email address privately held by Reddit. Oh, and, everything you post.
+Social media platforms like Reddit allow users to discuss a variety of topics without explicitly revealing any personally identifiable information. No name, no photo, no age, and no location. All that necessarily identifies you is a username of your choosing, and an email address privately held by Reddit. Oh, and, everything you post.
 
 ** What gives you away?
 
-Most people are aware of the impact that the *semantic* content of
-their comments has on their anonymity. For example, if you casually
-mention "your husband", then it becomes known that (1) you are
-married, and (2) that you are most likely a homosexual male, or a
-straight female, or some other compatible orientation. Later, you may
-mention driving past a Whataburger on your way to work. Now, it is
-known that you live somewhere in the southeast of the United
-States. If you post frequently on /r/programming, then details about
-your profession become known, or at least implied, and so on.
+Most people are aware of the impact that the *semantic* content of their comments has on their anonymity. For example, if you casually mention "your husband", then it becomes known that (1) you are married, and (2) that you are most likely a homosexual male, or a straight female, or some other compatible orientation. Later, you may mention driving past a Whataburger on your way to work. Now, it is known that you live somewhere in the southeast of the United States. If you post frequently on /r/programming, then details about your profession become known, or at least implied, and so on.
 
-Tools such as [[https://snoopsnoo.com/][snoopsnoo]], and its backend [[https://github.com/orionmelt/sherlock][Sherlock]], exploit this
-information to provide identifying summaries of Reddit accounts.
+Tools such as [[https://snoopsnoo.com/][snoopsnoo]], and its backend [[https://github.com/orionmelt/sherlock][Sherlock]], exploit this information to provide identifying summaries of Reddit accounts.
 
-What people do not tend to think about, however, is the impact that
-the *non-semantic* content of their comments has on their
-anonymity. Non-semantic content refers to the results of decisions
-made when constructing a sentence which do not directly alter the
-meaning of that sentence. These decisions are generally made without
-direct focus, and often persist without regard to the actual topic of
-discussion.
+What people do not tend to think about, however, is the impact that the *non-semantic* content of their comments has on their anonymity. Non-semantic content refers to the results of decisions made when constructing a sentence which do not directly alter the meaning of that sentence. These decisions are generally made without direct focus, and often persist without regard to the actual topic of discussion.
 
-An example of non-semantic decisions in sentence construction would be
-synonym selection. This refers to the decisions an individual makes
-when choosing words to refer to a concept. One trivial, but tangible,
-example of synonym selection is illustrated by Alan McConchie on his
-website [[http://popvssoda.com/][PopVsSoda]]. Alan asked visitors which term they used to refer
-to "soft drinks"; either (1) soda, (2) pop, or (3) coke. He found that
-the choice of term was highly dependent on geography. If you leave a
-comment on Reddit, and refer to "pop", you have provided a significant
-amount of information about your location of residence, or perhaps
-upbringing.
+An example of non-semantic decisions in sentence construction would be synonym selection. This refers to the decisions an individual makes when choosing words to refer to a concept. One trivial, but tangible, example of synonym selection is illustrated by Alan McConchie on his website [[http://popvssoda.com/][PopVsSoda]]. Alan asked visitors which term they used to refer to "soft drinks"; either (1) soda, (2) pop, or (3) coke. He found that the choice of term was highly dependent on geography. If you leave a comment on Reddit, and refer to "pop", you have provided a significant amount of information about your location of residence, or perhaps upbringing.
 
-More examples in this category include the use of "whilst", or "lorry"
-versus "pickup", or "y'all", or "you's" or "gals" or "dudes". Regional
-slang, community lingo, industry terminology, and obscure contractions
-all fall into this category.
+More examples in this category include the use of "whilst", or "lorry" versus "pickup", or "y'all", or "you's" or "gals" or "dudes". Regional slang, community lingo, industry terminology, and obscure contractions all fall into this category.
 
-Other non-semantic identifiers are much more subtle. For example, the
-usage frequency of uncommon words certainly varies by individual, and
-may correlate to education or upbringing. A tendency towards longer
-sentences with more clauses, as opposed to multiple shorter sentences,
-may be similarly identifying. You can even [[https://pdfs.semanticscholar.org/c057/8733f43ff7a5171259d37084cf4af89c2ced.pdf][predict an individual's
-native language by the misspellings they produce in a secondary
-language!]]
+Other non-semantic identifiers are much more subtle. For example, the usage frequency of uncommon words certainly varies by individual, and may correlate to education or upbringing. A tendency towards longer sentences with more clauses, as opposed to multiple shorter sentences, may be similarly identifying. You can even [[https://pdfs.semanticscholar.org/c057/8733f43ff7a5171259d37084cf4af89c2ced.pdf][predict an individual's native language by the misspellings they produce in a secondary language!]]
 
-To summarize, semantic content is what you meant to say, and
-non-semantic content is what you didn't realize you'd even said.
+To summarize, semantic content is what you meant to say, and non-semantic content is what you didn't realize you'd even said.
 
 ** Exploiting Semantic versus Non-Semantic Content
 
-Semantic information is *significantly* more powerful when the author
-is not concerned with maintaining anonymity. If someone says, "I live
-in Manchester", then it's a pretty good guess that they live in
-Manchester. But, it is similarly easy for an individual to censor
-the semantic content of their comments. Semantic content is generated
-consciously -- you are aware that you're saying it, and it's
-comparably easy to decide not to say it.
+Semantic information is *significantly* more powerful when the author is not concerned with maintaining anonymity. If someone says, "I live in Manchester", then it's a pretty good guess that they live in Manchester. But, it is similarly easy for an individual to censor the semantic content of their comments. Semantic content is generated consciously -- you are aware that you're saying it, and it's comparably easy to decide not to say it.
 
-While non-semantic information tends to be much less identifying, it
-is also much more difficult to contain. For example, if you want to
-conceal the fact that you're from the upper midwest, you'll need to
-remember to say "casserole", and not "hotdish". "Casserole" being the
-more typical name for the same(ish) dish. However, you would not
-generally be aware that you're using a regional dialect to refer to
-the object -- only that you're referring to the object. So, how can
-you be expected to avoid it?
+While non-semantic information tends to be much less identifying, it is also much more difficult to contain. For example, if you want to conceal the fact that you're from the upper midwest, you'll need to remember to say "casserole", and not "hotdish". "Casserole" being the more typical name for the same(ish) dish. However, you would not generally be aware that you're using a regional dialect to refer to the object -- only that you're referring to the object. So, how can you be expected to avoid it?
 
-It follows, then, that the only time you'd want to rely on
-non-semantic identifiers for deanonymization is when the author is
-actively attempting to maintain their anonymity. You would want to
-target the aspects of their speech that they have the least control
-over.
+It follows, then, that the only time you'd want to rely on non-semantic identifiers for deanonymization is when the author is actively attempting to maintain their anonymity. You would want to target the aspects of their speech that they have the least control over.
 
 ** Anonymity in Social Media
 
-Anonymity in online interactions tends to lead to some very polarizing
-opinions, and some very contradictory impacts on how we socialize.
+Anonymity in online interactions tends to lead to some very polarizing opinions, and some very contradictory impacts on how we socialize.
 
 *** One of Reddit's greatest strengths is its anonymity.
 
-People often feel free to express ideas or concerns on Reddit that
-they would not feel comfortable sharing on platforms associated with
-their personal identity. The site regularly functions as a source of
-support for those struggling with things like;
+People often feel free to express ideas or concerns on Reddit that they would not feel comfortable sharing on platforms associated with their personal identity. The site regularly functions as a source of support for those struggling with things like;
 - Depression and other mental illness
 - A history of sexual assault or domestic abuse
 - Sexual orientations not embraced by their family or community
 - Relationship, financial, or other sensitive personal issues
 - Liberal ideas in socially oppressive societies
 
-Users in these situations are often so concerned about maintaining
-their anonymity that they create "throwaway" accounts. A "throwaway"
-is Reddit lingo for an account dedicated to discussing a single topic,
-hedging against deanonymization through comment history analysis.
+Users in these situations are often so concerned about maintaining their anonymity that they create "throwaway" accounts. A "throwaway" is Reddit lingo for an account dedicated to discussing a single topic, hedging against deanonymization through comment history analysis.
 
-Without the security of anonymity, many of these people may be left
-without an outlet for their emotions and fears. They're left without
-any clear avenue through which they can seek the help of others.
+Without the security of anonymity, many of these people may be left without an outlet for their emotions and fears. They're left without any clear avenue through which they can seek the help of others.
 
-On a lighter note, anonymity makes it much easier to grow as a
-person. It lowers the inhibitions that an individual may hold when
-sharing opinions on controversial topics, and reduces perceived social
-penalties for admitting when you've been wrong. In a very real sense,
-you can simulate what it's like to hold an opinion without ever
-actually making a claim using your personal identity.
+On a lighter note, anonymity makes it much easier to grow as a person. It lowers the inhibitions that an individual may hold when sharing opinions on controversial topics, and reduces perceived social penalties for admitting when you've been wrong. In a very real sense, you can simulate what it's like to hold an opinion without ever actually making a claim using your personal identity.
 
 *** One of Reddit's greatest faults is its anonymity.
 
-While anonymity can enable some of the most authentic, unadulterated
-conversations, it also contributes to quite the opposite.
+While anonymity can enable some of the most authentic, unadulterated conversations, it also contributes to quite the opposite.
 
-Because there is no concrete link between a Reddit account and a human
-identity, one human author may have a large number of Reddit
-accounts. From the perspective of anonymity, this is quite
-desirable. However, the issues begin when these accounts are used to
-create the illusion of a majority opinion.
+Because there is no concrete link between a Reddit account and a human identity, one human author may have a large number of Reddit accounts. From the perspective of anonymity, this is quite desirable. However, the issues begin when these accounts are used to create the illusion of a majority opinion.
 
-When someone opens a discussion thread on Reddit, and they see many
-accounts all conveying the same idea, they will naturally become
-somewhat more habituated towards that idea. They will develop a sense
-of consensus towards that idea, without regard to their own organic
-thoughts. This consensus won't necessarily shadow their own thoughts,
-but it will color them.
+When someone opens a discussion thread on Reddit, and they see many accounts all conveying the same idea, they will naturally become somewhat more habituated towards that idea. They will develop a sense of consensus towards that idea, without regard to their own organic thoughts. This consensus won't necessarily shadow their own thoughts, but it will color them.
 
-When each account is authentically associated with an individual
-human, this effect is -- for lack of a better term -- natural. We've
-been doing this for centuries. But, when a small number of humans are
-using a larger number of accounts to create the illusion of consensus,
-that is manipulation of public opinion at scale.
+When each account is authentically associated with an individual human, this effect is -- for lack of a better term -- natural. We've been doing this for centuries. But, when a small number of humans are using a larger number of accounts to create the illusion of consensus, that is manipulation of public opinion at scale.
 
-Unfortunately, these concerns are no longer relegated to the tinfoil
-hat crowd. In 2018, [[https://www.reddit.com/r/announcements/comments/9bvkqa/an_update_on_the_fireeye_report_and_reddit/][Reddit announced evidence of Iranian propaganda]] on
-the site. At least 143 accounts are believed to have been
-involved. It's likely that most of these campaigns have simply gone
-undetected.
+Unfortunately, these concerns are no longer relegated to the tinfoil hat crowd. In 2018, [[https://www.reddit.com/r/announcements/comments/9bvkqa/an_update_on_the_fireeye_report_and_reddit/][Reddit announced evidence of Iranian propaganda]] on the site. At least 143 accounts are believed to have been involved. It's likely that most of these campaigns have simply gone undetected.
 
-Anonymity can threaten online conversation even when account scaling
-is not in effect. Through an activity called "brigading", members of
-one subreddit may spam another subreddit in an effort to derail their
-conversations. Because rules against brigading are strictly enforced
-by the Reddit admins, those who engage in it will often switch to a
-throwaway account to conceal their origin.
+Anonymity can threaten online conversation even when account scaling is not in effect. Through an activity called "brigading", members of one subreddit may spam another subreddit in an effort to derail their conversations. Because rules against brigading are strictly enforced by the Reddit admins, those who engage in it will often switch to a throwaway account to conceal their origin.
 
 ** How =idiovec= Helps
 
-When fully implemented, it is the goal of the author of /this/ text to
-provide a tool which can help individuals assess, objectively, the
-amount of identifying information they've shared online. Optimally,
-end-user applications will provide this information to the individual
-/before/ they publish the information. Imagine something akin to a
-browser plugin which, locally, monitors the text you enter and warns
-against identifying non-semantic information leaks.
+When fully implemented, it is the goal of the author of /this/ text to provide a tool which can help individuals assess, objectively, the amount of identifying information they've shared online. Optimally, end-user applications will provide this information to the individual /before/ they publish the information. Imagine something akin to a browser plugin which, locally, monitors the text you enter and warns against identifying non-semantic information leaks.
 
-Further, =idiovec= could be used to build toolchains which detect
-brigading and spam campaigns. You could, theoretically, detect an
-influx of comments whose mutual dialects are associated with a
-particular subreddit. Maybe, all of a sudden, you're seeing a bunch of
-critical comments in an /r/apple thread...and in aggregate, the
-dialect of those comments matches /r/android? That sort of thing.
+Further, =idiovec= could be used to build toolchains which detect brigading and spam campaigns. You could, theoretically, detect an influx of comments whose mutual dialects are associated with a particular subreddit. Maybe, all of a sudden, you're seeing a bunch of critical comments in an /r/apple thread...and in aggregate, the dialect of those comments matches /r/android? That sort of thing.
 
 * How does it work?
 
-=idiovec= is currently transitioning from concept to prototype, and
-the current implementation is neither remotely complete nor
-even functional.
+=idiovec= is currently transitioning from concept to prototype, and the current implementation is neither remotely complete nor even functional.
 
-That being said, the current plan is that =idiovec= will be
-implemented using two deep learning models -- first, a model which
-generates embeddings for the labeled inputs, and second, an encoder
-which generates embeddings from novel inputs. At the core of both of
-these models will be hand-written identifiers implementing established
-and novel stylometric methods.
+That being said, the current plan is that =idiovec= will be implemented using two deep learning models -- first, a model which generates embeddings for the labeled inputs, and second, an encoder which generates embeddings from novel inputs. At the core of both of these models will be hand-written identifiers implementing established and novel stylometric methods.
 
 ** The Training Data
 
-This is trivially simple. Each sample consists of a text -- such as a
-Reddit comment -- and a label. The label would be a Reddit username,
-for idiolect vectorization, or a subreddit name for dialect
-vectorization, etc.
+This is trivially simple. Each sample consists of a text -- such as a Reddit comment -- and a label. The label would be a Reddit username, for idiolect vectorization, or a subreddit name for dialect vectorization, etc.
 
 ** The Stylometric Characteristic Vector
 
-=idiovec= will transform the input text, in every sample, into a set
-of attribute vectors. These will be calculated from a set of
-styolmetric algorithms & models.
+=idiovec= will transform the input text, in every sample, into a set of attribute vectors. These will be calculated from a set of styolmetric algorithms & models.
 
-While existing stylometric properties will be implemented to establish
-a performance baseline, the goal is to move towards more perceptive
-indicators which have not previously been possible. We will go into
-the indicators in more detail below -- for now, just know that texts
-are transformed into characteristic vectors.
+While existing stylometric properties will be implemented to establish a performance baseline, the goal is to move towards more perceptive indicators which have not previously been possible. We will go into the indicators in more detail below -- for now, just know that texts are transformed into characteristic vectors.
 
 ** The Embeddings
 
-The input to the embedding model is a one-hot encoding, with one
-binary input per label in the vocabulary (number of authors or
-communities in the training set, for example). The training output
-of this model will be the stylometric characteristic vector generated
-from a text corresponding to that author.
+The input to the embedding model is a one-hot encoding, with one binary input per label in the vocabulary (number of authors or communities in the training set, for example). The training output of this model will be the stylometric characteristic vector generated from a text corresponding to that author.
 
-The hidden layer will capture the embeddings for each label in the
-training set.
+The hidden layer will capture the embeddings for each label in the training set.
 
-At this point, the embeddings from accounts in the training set can
-already be compared and clustered in order to find relationships
-between accounts and communities. However, the model will need to be
-recomputed in order to analyze new data. Our final step works around
-this limitation.
+At this point, the embeddings from accounts in the training set can already be compared and clustered in order to find relationships between accounts and communities. However, the model will need to be recomputed in order to analyze new data. Our final step works around this limitation.
 
 ** The Encoder
 
-The encoder will accept, as input, a stylometric characteristic vector
-and produce, as its output, and idiolect vector embedding.
+The encoder will accept, as input, a stylometric characteristic vector and produce, as its output, and idiolect vector embedding.
 
-Once trained, *this model will allow us to map transform arbitrary
-texts into relational vectors extremely efficiently*. Executing the
-encoder model allows us to avoid re-learning the embedding model
-whenever new data has been added to the dataset.
+Once trained, *this model will allow us to map transform arbitrary texts into relational vectors extremely efficiently*. Executing the encoder model allows us to avoid re-learning the embedding model whenever new data has been added to the dataset.
 
 ** More on Stylometric Characteristic Vectors
 
 =idiovec= only works as well as its feature detectors.
 
-The first three below are established methods of stylometry, and are
-explained exceptionally well by [[https://programminghistorian.org/en/lessons/introduction-to-stylometry-with-python][the Programming Historian]]. They will
-be implemented first in order to establish a performance baseline, and
-work through the initial problem of mapping arbitrary distance
-functions to a common dialect vector embedding.
+The first three below are established methods of stylometry, and are explained exceptionally well by [[https://programminghistorian.org/en/lessons/introduction-to-stylometry-with-python][the Programming Historian]]. They will be implemented first in order to establish a performance baseline, and work through the initial problem of mapping arbitrary distance functions to a common dialect vector embedding.
 
-*The final two indicators are more indicative of where I'd like to
-take =idiovec=*. So far as I know, neither has been used yet in
-computational stylometry.
+*The final two indicators are more indicative of where I'd like to take =idiovec=*. So far as I know, neither has been used yet in computational stylometry.
 
 *** Mendenhall's Characteristic Curves of Composition
 
@@ -322,22 +160,14 @@ TODO explain
 
 TODO flesh out idea
 
-This method will use [[https://spacy.io/usage/linguistic-features][Spacy parse trees]] and some method of tree
-averaging and tree comparison to find common habits in sentence
-structuring. For example, [[https://en.wikipedia.org/wiki/Preposition_stranding][preposition stranding]].
+This method will use [[https://spacy.io/usage/linguistic-features][Spacy parse trees]] and some method of tree averaging and tree comparison to find common habits in sentence structuring. For example, [[https://en.wikipedia.org/wiki/Preposition_stranding][preposition stranding]].
 
-This is primarily a perceptual problem, and as such, the mapping from
-grammar tree to characteristic vector /may require a neural model on
-its own/.
+This is primarily a perceptual problem, and as such, the mapping from grammar tree to characteristic vector /may require a neural model on its own/.
 
 *** Word Embeddings and Synonym Selection
 
 TODO flesh out idea
 
-For non-function words (IE words with refer to semantic content),
-detect synonyms as words with a short embedding distance from GLOVE or
-starspace, etc. If one labelled set tends towards one word, while
-another uses a different word, and the two words have a very short
-embedding separation, then this may be indicative of dialect.
+For non-function words (IE words with refer to semantic content), detect synonyms as words with a short embedding distance from GLOVE or starspace, etc. If one labelled set tends towards one word, while another uses a different word, and the two words have a very short embedding separation, then this may be indicative of dialect.
 
 
